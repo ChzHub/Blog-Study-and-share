@@ -1,0 +1,17 @@
+---
+import Base from '../layouts/Base.astro';
+import Cover from '../components/Cover.astro';
+import PostCard from '../components/PostCard.astro';
+import Icon from '../components/Icon.astro';
+import { getPosts, getTags, postUrl, tagUrl, formatDate, readingTime, isDemo } from '../lib/posts';
+import { selectFeatured } from '../lib/publishing';
+const posts = await getPosts();
+const featured = selectFeatured(posts);
+const tags = getTags(posts);
+---
+<Base>
+  <section class="home-intro shell"><div class="intro-kicker"><span class="live-dot"></span> 一本持续更新的个人技术手记 <span class="intro-edition">DIGITAL GARDEN · EST. 2026</span></div><div class="intro-title"><h1>记录，思考，<em>生长。</em></h1><div class="intro-caption"><p>在代码与日常之间，<br />收集值得留下的想法。</p><span class="intro-star" aria-hidden="true">✳</span></div></div><div class="intro-bottom"><span>关于技术，也关于如何更好地学习。</span><a href="/about/">认识这个博客 <Icon name="arrow" size={17} /></a></div></section>
+  {featured && <section class="featured-section shell" aria-labelledby="featured-label"><div class="section-eyebrow"><h2 id="featured-label">本期精选 <span>EDITOR'S PICK</span></h2><span class="eyebrow-index">01 — 精选手记</span></div><article class="featured-card"><div class="featured-copy"><div class="feature-meta"><span class="red-label">精选文章</span>{isDemo(featured) && <span>示例内容</span>}</div><div><div class="inline-tags feature-tags">{featured.data.tags.map(tag => <a href={tagUrl(tag)}>{tag}</a>)}</div><h2><a href={postUrl(featured)}>{featured.data.title}</a></h2><p>{featured.data.description}</p></div><div class="featured-bottom"><span><time datetime={featured.data.pubDate.toISOString()}>{formatDate(featured.data.pubDate)}</time><span class="meta-dot">·</span>{readingTime(featured.body)} 分钟阅读</span><a class="round-arrow" href={postUrl(featured)} aria-label={`阅读：${featured.data.title}`}><Icon name="arrow" /></a></div></div><a href={postUrl(featured)} class="featured-visual" aria-label={`阅读精选：${featured.data.title}`}><Cover post={featured} hero /></a></article></section>}
+  <section class="latest-section shell" aria-labelledby="latest-label"><div class="section-heading"><div><div class="eyebrow">THE LATEST</div><h2 id="latest-label">最近的思考<span class="heading-dot">.</span></h2></div><a class="text-link" href="/posts/">浏览全部文章 <Icon name="arrow" size={18} /></a></div><div class="topic-bar"><a href="/posts/" class="topic-all">全部文章 <span>{posts.length}</span></a><div class="topic-links">{tags.slice(0, 5).map(tag => <a href={tagUrl(tag.name)}>{tag.name}<span>{tag.count}</span></a>)}</div><span class="topic-note">慢慢积累，常常回看</span></div>{posts.length ? <div class="post-grid">{posts.slice(0, 6).map((post, index) => <PostCard post={post} index={index} />)}</div> : <div class="empty-state"><h3>第一篇手记，正在酝酿。</h3><p>等一个想法，慢慢长成文章。</p></div>}<div class="all-posts-row"><a href="/posts/" class="outline-button">翻阅全部手记 <Icon name="arrow" size={18} /></a><span>保持好奇，下一篇见。</span></div></section>
+  <section class="rss-banner shell"><div class="rss-symbol" aria-hidden="true"><Icon name="rss" size={39} /></div><div class="rss-banner-copy"><div class="eyebrow">STAY IN THE LOOP</div><h2>好内容，值得慢慢等。</h2><p>通过 RSS 关注更新，让新文章来到你的阅读器。</p></div><a class="dark-button" href="/rss.xml">订阅手记 <Icon name="arrow" size={18} /></a></section>
+</Base>

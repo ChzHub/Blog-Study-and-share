@@ -1,0 +1,9 @@
+---
+import Base from '../../layouts/Base.astro';
+import PostList from '../../components/PostList.astro';
+import Pagination from '../../components/Pagination.astro';
+import { getPosts } from '../../lib/posts';
+import { pageCount } from '../../lib/publishing';
+const posts = await getPosts();
+---
+<Base title="全部文章"><div class="shell inner-page"><header class="page-heading"><span class="eyebrow">THE ARCHIVE</span><h1>每一篇，都是一次思考<span>.</span></h1><p>写下遇到的问题，也写下慢慢找到的答案。<span class="count-label">共 {posts.length} 篇手记</span></p></header><PostList posts={posts.slice(0, 10)} />{!posts.length && <p class="empty-state">还没有发布的文章，第一篇手记即将到来。</p>}<Pagination current={1} total={pageCount(posts.length)} /></div></Base>

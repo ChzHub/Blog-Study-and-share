@@ -1,0 +1,14 @@
+---
+import type { Post } from '../lib/posts';
+import { postUrl, formatDate, readingTime, tagUrl } from '../lib/posts';
+import Icon from './Icon.astro';
+interface Props { posts: Post[]; }
+const { posts } = Astro.props;
+---
+<div class="post-list">
+  {posts.map(post => <article class="post-list-item">
+    <div class="list-date"><time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time><span>{readingTime(post.body)} 分钟阅读</span></div>
+    <div class="list-body"><h2><a href={postUrl(post)}>{post.data.title}</a></h2><p>{post.data.description}</p><div class="inline-tags">{post.data.tags.map(tag => <a href={tagUrl(tag)}>{tag}</a>)}</div></div>
+    <a class="list-arrow" href={postUrl(post)} aria-label={`阅读：${post.data.title}`}><Icon name="arrow" /></a>
+  </article>)}
+</div>

@@ -1,0 +1,11 @@
+---
+import Base from '../../layouts/Base.astro';
+import PostList from '../../components/PostList.astro';
+import { getPosts, getTags } from '../../lib/posts';
+export async function getStaticPaths() {
+  const posts = await getPosts();
+  return getTags(posts).map(tag => ({ params: { tag: tag.name }, props: { tag, posts: posts.filter(post => post.data.tags.includes(tag.name)) } }));
+}
+const { tag, posts } = Astro.props;
+---
+<Base title={`${tag.name} · 主题`}><div class="shell inner-page"><a class="back-link" href="/tags/">← 全部主题</a><header class="page-heading"><span class="eyebrow">A THREAD OF THOUGHT</span><h1>{tag.name}<span>.</span></h1><p>关于这个主题的 {tag.count} 篇手记。</p></header><PostList posts={posts} /></div></Base>

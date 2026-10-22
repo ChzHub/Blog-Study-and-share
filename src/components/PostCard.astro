@@ -1,0 +1,15 @@
+---
+import type { Post } from '../lib/posts';
+import { postUrl, tagUrl, formatDate, readingTime, isDemo } from '../lib/posts';
+import Cover from './Cover.astro';
+import Icon from './Icon.astro';
+interface Props { post: Post; index?: number; }
+const { post, index = 0 } = Astro.props;
+---
+<article class="post-card">
+  <a class="post-card-cover" href={postUrl(post)} tabindex="-1" aria-hidden="true"><Cover post={post} /></a>
+  <div class="card-meta"><span>{String(index + 1).padStart(2, '0')} / {isDemo(post) ? '示例文章' : '技术手记'}</span><time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time></div>
+  <h3><a href={postUrl(post)}>{post.data.title}</a></h3>
+  <p>{post.data.description}</p>
+  <div class="card-bottom"><div class="inline-tags">{post.data.tags.map(tag => <a href={tagUrl(tag)}>{tag}</a>)}</div><span class="reading-time">{readingTime(post.body)} 分钟阅读 <Icon name="arrow" size={17} /></span></div>
+</article>

@@ -1,0 +1,7 @@
+---
+import Base from '../../layouts/Base.astro';
+import Icon from '../../components/Icon.astro';
+import { getPosts, getTags, tagUrl } from '../../lib/posts';
+const tags = getTags(await getPosts());
+---
+<Base title="主题索引"><div class="shell inner-page"><header class="page-heading"><span class="eyebrow">FOLLOW YOUR CURIOSITY</span><h1>循着好奇，找到同类<span>.</span></h1><p>把散落的思考，串成一条条线索。</p></header><div class="tag-grid">{tags.map((tag, index) => <a class="tag-card" href={tagUrl(tag.name)}><span class="tag-number">TOPIC / {String(index + 1).padStart(2, '0')}</span><h2>{tag.name}</h2><div><span>{tag.count} 篇手记</span><Icon name="arrow" /></div></a>)}</div>{!tags.length && <p class="empty-state">文章发布后，主题会在这里慢慢汇聚。</p>}</div></Base>

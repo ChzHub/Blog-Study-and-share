@@ -1,0 +1,6 @@
+---
+import Base from '../layouts/Base.astro';
+import Icon from '../components/Icon.astro';
+import { site } from '../config/site';
+---
+<Base title="关于这里"><div class="shell inner-page about-page"><header class="page-heading"><span class="eyebrow">BEHIND THE NOTES</span><h1>你好，很高兴在这里遇见你<span>.</span></h1><p>一个人的数字花园，一些还在生长的想法。</p></header><div class="about-layout"><div class="about-art" aria-hidden="true"><div class="about-sun">✳</div><span>STAY CURIOUS.<br />KEEP GROWING.</span><small>保持好奇，缓慢生长。</small></div><div class="about-content prose"><h2>为什么有这个博客</h2><p>{site.author.introduction}</p><p>与其等到完全理解之后再写，不如让写作本身成为理解的一部分。这里会留下问题、尝试，以及当下认为有用的答案。</p><h2>这片花园里有什么</h2><ul><li><strong>前端与界面：</strong>从浏览器原理到页面里一个恰到好处的间距。</li><li><strong>工程实践：</strong>让代码更清楚，让重复的事情更简单。</li><li><strong>学习与思考：</strong>阅读、笔记，以及把知识连接起来的方法。</li></ul><h2>保持联系</h2><p>你可以通过 <a href="/rss.xml">RSS 订阅</a>关注新文章，把阅读留在自己喜欢的节奏里。</p>{site.socials.length > 0 && <div class="social-links">{site.socials.map(link => <a href={link.url} target="_blank" rel="noopener noreferrer">{link.label} <Icon name="external" size={15} /></a>)}</div>}<aside class="notice"><strong>关于本站内容</strong><p>{site.author.bio}</p></aside></div></div></div></Base>

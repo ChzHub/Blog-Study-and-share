@@ -1,0 +1,14 @@
+---
+import Base from '../../../layouts/Base.astro';
+import PostList from '../../../components/PostList.astro';
+import Pagination from '../../../components/Pagination.astro';
+import { getPosts } from '../../../lib/posts';
+import { pageCount } from '../../../lib/publishing';
+export async function getStaticPaths() {
+  const posts = await getPosts();
+  const total = pageCount(posts.length);
+  return Array.from({ length: total - 1 }, (_, index) => ({ params: { page: String(index + 2) }, props: { posts: posts.slice((index + 1) * 10, (index + 2) * 10), current: index + 2, total } }));
+}
+const { posts, current, total } = Astro.props;
+---
+<Base title={`全部文章 · 第 ${current} 页`}><div class="shell inner-page"><header class="page-heading"><span class="eyebrow">THE ARCHIVE</span><h1>继续翻阅<span>.</span></h1><p>所有手记，按时间慢慢展开。</p></header><PostList posts={posts} /><Pagination current={current} total={total} /></div></Base>

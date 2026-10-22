@@ -1,0 +1,75 @@
+---
+import Base from '../layouts/Base.astro';
+import Icon from '../components/Icon.astro';
+---
+<Base title="搜索手记" noindex><div class="shell inner-page search-page"><header class="page-heading"><span class="eyebrow">FIND A SPARK</span><h1>找一个答案，或新的问题<span>.</span></h1><p>搜索标题与正文，找回某个曾经闪过的想法。</p></header><form id="search-form" class="search-form" role="search"><label class="sr-only" for="search-input">搜索文章</label><Icon name="search" size={25} /><input id="search-input" type="search" name="q" placeholder="试试「学习」或「TypeScript」" autocomplete="off" /><button type="submit">搜索 <Icon name="arrow" size={18} /></button></form><div class="search-suggestions"><span>从一个关键词开始</span>{['学习', 'TypeScript', 'CSS', 'Markdown'].map(term => <button type="button" data-search-term={term}>{term}</button>)}</div><p id="search-status" class="search-status" role="status" aria-live="polite">你的下一个发现，也许就藏在这里。</p><div id="search-results" class="search-results" aria-busy="false"></div><noscript><p class="notice">站内搜索需要启用 JavaScript。你仍可以<a href="/posts/">浏览全部文章</a>或<a href="/tags/">按主题查找</a>。</p></noscript></div>
+  <script>
+    type SearchData = { url: string; meta: { title?: string; description?: string }; excerpt: string };
+    type Pagefind = { search: (query: string) => Promise<{ results: { data: () => Promise<SearchData> }[] }> };
+    const form = document.querySelector<HTMLFormElement>('#search-form')!;
+    const input = document.querySelector<HTMLInputElement>('#search-input')!;
+    const status = document.querySelector<HTMLParagraphElement>('#search-status')!;
+    const results = document.querySelector<HTMLDivElement>('#search-results')!;
+    let pagefind: Promise<Pagefind> | undefined;
+    let loadAttempt = 0;
+    let generation = 0;
+    let timer: ReturnType<typeof setTimeout>;
+    const stripMarkup = (value: string) => {
+      const doc = new DOMParser().parseFromString(value, 'text/html');
+      return doc.body.textContent ?? '';
+    };
+    async function search() {
+      const id = ++generation;
+      const query = input.value.trim();
+      const url = new URL(location.href);
+      if (query) url.searchParams.set('q', query); else url.searchParams.delete('q');
+      history.replaceState(null, '', url);
+      results.replaceChildren();
+      results.setAttribute('aria-busy', String(Boolean(query)));
+      if (!query) { status.textContent = '你的下一个发现，也许就藏在这里。'; return; }
+      status.textContent = '正在寻找相关手记…';
+      try {
+        const moduleUrl = `/pagefind/pagefind.js?attempt=${++loadAttempt}`;
+        pagefind ??= import(/* @vite-ignore */ moduleUrl) as Promise<Pagefind>;
+        const api = await pagefind;
+        const response = await api.search(query);
+        const entries = await Promise.all(response.results.map(result => result.data()));
+        if (id !== generation) return;
+        status.textContent = entries.length ? `找到 ${entries.length} 篇与「${query}」相关的手记` : `没有找到「${query}」，试试更短的关键词或浏览主题。`;
+        for (const entry of entries) {
+          const article = document.createElement('article');
+          article.className = 'search-result';
+          const heading = document.createElement('h2');
+          const link = document.createElement('a');
+          const target = new URL(entry.url, location.origin);
+          if (target.origin !== location.origin) continue;
+          link.href = target.pathname + target.hash;
+          link.textContent = entry.meta.title ?? '未命名手记';
+          heading.append(link);
+          const excerpt = document.createElement('p');
+          excerpt.textContent = stripMarkup(entry.excerpt || entry.meta.description || '');
+          article.append(heading, excerpt);
+          results.append(article);
+        }
+      } catch {
+        if (id !== generation) return;
+        pagefind = undefined;
+        status.textContent = '搜索暂时不可用，请重试。也可以从「文章」或「主题」继续浏览。';
+      } finally { if (id === generation) results.setAttribute('aria-busy', 'false'); }
+    }
+    form.addEventListener('submit', event => { event.preventDefault(); clearTimeout(timer); void search(); });
+    input.addEventListener('input', () => {
+      ++generation;
+      clearTimeout(timer);
+      timer = setTimeout(() => { void search(); }, 250);
+    });
+    document.querySelectorAll<HTMLButtonElement>('[data-search-term]').forEach(button => button.addEventListener('click', () => {
+      clearTimeout(timer);
+      input.value = button.dataset.searchTerm ?? '';
+      input.focus();
+      void search();
+    }));
+    input.value = new URLSearchParams(location.search).get('q') ?? '';
+    if (input.value) void search();
+  </script>
+</Base>

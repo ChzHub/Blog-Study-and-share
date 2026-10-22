@@ -1,0 +1,47 @@
+---
+import { render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import Cover from '../../components/Cover.astro';
+import Icon from '../../components/Icon.astro';
+import { site } from '../../config/site';
+import { getPosts, formatDate, readingTime, tagUrl, postUrl } from '../../lib/posts';
+export async function getStaticPaths() {
+  const posts = await getPosts();
+  return posts.map((post, index) => ({ params: { slug: post.id }, props: { post, newer: posts[index - 1], older: posts[index + 1] } }));
+}
+const { post, newer, older } = Astro.props;
+const { Content, headings } = await render(post);
+const toc = headings.filter(heading => heading.depth === 2 || heading.depth === 3);
+---
+<Base title={post.data.title} description={post.data.description} article image={post.data.cover?.src}>
+  <Fragment slot="head"><meta property="article:published_time" content={post.data.pubDate.toISOString()} /><script type="application/ld+json" set:html={JSON.stringify({ '@context': 'https://schema.org', '@type': 'BlogPosting', headline: post.data.title, description: post.data.description, datePublished: post.data.pubDate.toISOString(), author: { '@type': 'Person', name: site.author.name }, mainEntityOfPage: new URL(postUrl(post), site.url).href }).replace(/</g, '\\u003c')} /></Fragment>
+  <article class="shell article-page" data-pagefind-body>
+    <header class="article-header"><a class="back-link" href="/posts/" data-pagefind-ignore>← 全部手记</a><div class="inline-tags">{post.data.tags.map(tag => <a href={tagUrl(tag)} data-pagefind-filter="tag">{tag}</a>)}</div><h1 data-pagefind-meta="title">{post.data.title}</h1><p class="article-description" data-pagefind-meta="description">{post.data.description}</p><div class="article-meta" data-pagefind-ignore><time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time><span>·</span><span>{readingTime(post.body)} 分钟阅读</span></div></header>
+    <div class="article-cover" data-pagefind-ignore><Cover post={post} hero /></div>
+    <div class="article-layout"><aside class="article-toc" aria-label="文章目录" data-pagefind-ignore>{toc.length > 0 && <details open><summary>文章目录 <span>CONTENTS</span></summary><nav>{toc.map(heading => <a href={`#${heading.slug}`} class:list={{ 'toc-sub': heading.depth === 3 }}>{heading.text}</a>)}</nav></details>}</aside><div class="article-main"><div class="prose"><Content /></div><div class="article-end" data-pagefind-ignore><span>✳</span><p>写下来，让思考有迹可循。</p><a href="/rss.xml">通过 RSS 关注后续更新 <Icon name="arrow" size={16} /></a></div></div></div>
+    <nav class="article-adjacent" aria-label="继续阅读" data-pagefind-ignore>{older ? <a href={postUrl(older)}><span>← 上一篇</span><h2>{older.data.title}</h2></a> : <div />}{newer ? <a href={postUrl(newer)}><span>下一篇 →</span><h2>{newer.data.title}</h2></a> : <div />}</nav>
+  </article>
+  <script>
+    document.querySelectorAll<HTMLPreElement>('.prose pre').forEach((pre) => {
+      const button = document.createElement('button');
+      button.className = 'copy-code';
+      button.type = 'button';
+      button.textContent = '复制';
+      button.setAttribute('aria-label', '复制代码');
+      button.dataset.pagefindIgnore = '';
+      button.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(pre.querySelector('code')?.textContent ?? '');
+          button.textContent = '已复制';
+        } catch { button.textContent = '复制失败，请手动选择'; }
+        setTimeout(() => { button.textContent = '复制'; }, 2200);
+      });
+      pre.append(button);
+    });
+    const toc = document.querySelector<HTMLDetailsElement>('.article-toc details');
+    const media = window.matchMedia('(min-width: 1000px)');
+    const updateToc = () => { if (toc) toc.open = media.matches; };
+    updateToc();
+    media.addEventListener('change', updateToc);
+  </script>
+</Base>

@@ -1,0 +1,48 @@
+---
+import '../styles/global.css';
+import { site } from '../config/site';
+import Icon from '../components/Icon.astro';
+interface Props { title?: string; description?: string; image?: string; article?: boolean; noindex?: boolean; }
+const { title, description = site.description, image = '/og-default.png', article = false, noindex = false } = Astro.props;
+const pageTitle = title ? `${title} · ${site.name}` : `${site.name} — 记录，思考，生长`;
+const canonical = new URL(Astro.url.pathname, site.url).href;
+const pathname = Astro.url.pathname;
+const links = [{ href: '/', label: '首页', active: pathname === '/' }, { href: '/posts/', label: '文章', active: pathname.startsWith('/posts/') }, { href: '/tags/', label: '主题', active: pathname.startsWith('/tags/') }, { href: '/about/', label: '关于', active: pathname === '/about/' }];
+---
+<!doctype html>
+<html lang={site.language}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#F7F5F0" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    <meta name="author" content={site.author.name} />
+    {noindex && <meta name="robots" content="noindex, follow" />}
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="alternate" type="application/rss+xml" title={`${site.name} RSS`} href="/rss.xml" />
+    <meta property="og:type" content={article ? 'article' : 'website'} />
+    <meta property="og:locale" content="zh_CN" />
+    <meta property="og:site_name" content={site.name} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={new URL(image, site.url).href} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <slot name="head" />
+  </head>
+  <body>
+    <a href="#main" class="skip-link">跳到正文</a>
+    <header class="site-header shell" data-pagefind-ignore>
+      <a class="brand" href="/" aria-label={`${site.name}首页`}><span class="brand-mark">记<span></span></span><span class="brand-text">{site.name}<small>{site.englishName}</small></span></a>
+      <nav aria-label="主导航" class="main-nav">{links.map(link => <a href={link.href} aria-current={link.active ? 'page' : undefined}>{link.label}</a>)}</nav>
+      <div class="header-actions"><a class="search-link" href="/search/" aria-label="搜索文章"><Icon name="search" /><span>搜索</span></a><span class="header-divider"></span><a class="rss-link" href="/rss.xml" aria-label="RSS 订阅"><Icon name="rss" size={18} /><span>订阅</span></a></div>
+    </header>
+    <main id="main" tabindex="-1"><slot /></main>
+    <footer class="site-footer shell" data-pagefind-ignore>
+      <div class="footer-top"><div><a class="footer-brand" href="/">{site.name}<span>。</span></a><p>认真观察，自由思考，持续记录。</p></div><div class="footer-links"><a href="/posts/">全部文章</a><a href="/about/">关于这里</a><a href="/rss.xml">RSS <Icon name="external" size={13} /></a></div></div>
+      <div class="footer-bottom"><span>© {new Date().getFullYear()} {site.name} · 以文字连接想法</span><span>MADE FOR THE CURIOUS <span class="tiny-sun">✳</span></span></div>
+    </footer>
+  </body>
+</html>

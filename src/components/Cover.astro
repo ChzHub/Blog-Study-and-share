@@ -1,0 +1,48 @@
+---
+import { Image } from 'astro:assets';
+import type { Post } from '../lib/posts';
+interface Props { post: Post; hero?: boolean; }
+const { post, hero = false } = Astro.props;
+const variants = ['orbital', 'windows', 'steps', 'grid', 'waves', 'blocks'];
+const hash = [...post.id].reduce((sum, char) => sum + char.charCodeAt(0), 0);
+const variant = post.data.featured ? 'orbital' : variants[hash % variants.length];
+---
+<div class:list={['cover', `cover--${variant}`, { 'cover--hero': hero }]} aria-hidden="true">
+  {post.data.cover ? <Image src={post.data.cover} alt="" widths={[480, 800, 1200]} sizes={hero ? '(max-width: 760px) 100vw, 60vw' : '(max-width: 760px) 100vw, 50vw'} loading={hero ? 'eager' : 'lazy'} /> : (
+    <>
+      <svg class="cover-art" viewBox="0 0 800 480" fill="none" preserveAspectRatio="xMidYMid slice">
+        {variant === 'orbital' && <>
+          <circle cx="430" cy="238" r="151" fill="#B94732" />
+          <circle cx="430" cy="238" r="112" fill="#C45C43" />
+          <path d="M430 87v302M279 238h302" stroke="#E8B092" stroke-opacity=".45" />
+          {[0, 1, 2, 3, 4, 5, 6].map((i) => <ellipse cx="430" cy="238" rx={43 + i * 25} ry={164 - i * 9} transform="rotate(-33 430 238)" stroke="#2D3D34" stroke-width="1.4" />)}
+          <circle cx="430" cy="238" r="192" stroke="#B7B2A1" stroke-dasharray="2 7" />
+          <path d="M110 369h152m-76-76v152M663 80v60m-30-30h60" stroke="#7D8373" />
+          <circle cx="220" cy="344" r="9" fill="#2D3D34" />
+          <circle cx="580" cy="129" r="5" fill="#EAC9A4" stroke="#2D3D34" />
+        </>}
+        {variant === 'windows' && <>
+          {[0, 1, 2].map(i => <g transform={`translate(${180 + i * 85} ${75 + i * 35})`}><rect width="310" height="240" rx="5" fill={['#CACBB6', '#F2D4B0', '#38564B'][i]} stroke="#3D4C40" /><path d="M0 32h310" stroke="#647360" /><circle cx="17" cy="16" r="3" fill="#B94732" /><path d="M65 88h180M65 113h130M65 138h155M65 163h95" stroke={i === 2 ? '#CFD8C4' : '#647360'} stroke-width="5" /></g>)}
+        </>}
+        {variant === 'steps' && <>
+          <circle cx="543" cy="144" r="74" fill="#C66D46" />
+          {[0, 1, 2, 3, 4].map(i => <path d={`M${180+i*70} ${380-i*50}v-90h70v90Z`} fill={['#C4C8AD', '#A9B79D', '#879E86', '#617F6B', '#365D4B'][i]} />)}
+          <path d="M130 390h550" stroke="#6F7C63" />
+        </>}
+        {variant === 'grid' && <>
+          {[0, 1, 2, 3, 4].map(i => <path d={`M${240+i*80} 70v340M240 ${70+i*80}h320`} stroke="#878B7B" />)}
+          <circle cx="400" cy="230" r="114" fill="#D48C61" /><rect x="400" y="230" width="160" height="160" fill="#465F50" /><circle cx="400" cy="230" r="40" fill="#E9DCC0" />
+        </>}
+        {variant === 'waves' && <>
+          <circle cx="540" cy="150" r="76" fill="#C86E4E" />
+          {[0, 1, 2, 3, 4, 5, 6].map(i => <path d={`M80 ${265+i*20}Q240 ${70+i*20} 400 ${265+i*20}T740 ${265+i*20}`} stroke={i % 2 ? '#748C77' : '#315644'} stroke-width="2" />)}
+        </>}
+        {variant === 'blocks' && <>
+          <rect x="225" y="115" width="155" height="245" fill="#345D4C" /><path d="M400 115h155v245H400z" fill="#D19065" /><circle cx="477" cy="193" r="77" fill="#EDDBBD" /><path d="M245 145h115m-115 20h115m-115 20h115m-115 20h115m-115 20h115m-115 20h115m-115 20h115m-115 20h115m-115 20h115m-115 20h115" stroke="#98AB8E" />
+        </>}
+      </svg>
+      <div class="cover-topline"><span>FIELD NOTES / 技术手记</span><span>图记 {String((hash % 6) + 1).padStart(2, '0')}</span></div>
+      <div class="cover-bottomline"><span>IDEAS TAKE SHAPE.</span><span>思考，自有形状</span></div>
+    </>
+  )}
+</div>
