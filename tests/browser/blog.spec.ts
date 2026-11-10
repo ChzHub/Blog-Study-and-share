@@ -3,9 +3,12 @@ import { test, expect } from '@playwright/test';
 test('home, article, tag navigation and RSS', async ({ page, request, context }) => {
   await context.grantPermissions(['clipboard-read', 'clipboard-write']);
   await page.goto('/');
-  await expect(page.locator('h1')).toContainText('记录，思考，生长。');
-  await expect(page.locator('.post-card')).toHaveCount(6);
-  await page.locator('.featured-copy h2 a').click();
+  await expect(page.locator('h1')).toContainText('技术手记作者');
+  await expect(page.locator('.home-article')).toHaveCount(6);
+  await page.locator('.author-intro-link').click();
+  await expect(page).toHaveURL(/\/about\/$/);
+  await page.goto('/');
+  await page.locator('.home-article h3 a').filter({ hasText: '把学习的过程' }).click();
   await expect(page.locator('h1')).toContainText('把学习的过程');
   await page.locator('.article-toc a').first().click();
   await expect(page).toHaveURL(url => decodeURIComponent(url.hash) === '#从一个具体的问题开始');
@@ -93,3 +96,75 @@ for (const width of [375, 768, 1440]) {
     await page.screenshot({ path: `test-results/article-${width}.png`, fullPage: true });
   });
 }
+
+test('admin edits content through GitHub without exposing a token to the site', async ({ page }) => {
+  const saved: { path: string; body: any }[] = [];
+  const content = { name: '技术手记', englishName: 'THE TECHNICAL JOURNAL', description: '简介', authorName: '作者', authorIntroduction: '介绍', authorBio: '说明', homeHeading: '最近的文章', postsHeading: '文章', tagsHeading: '主题', searchHeading: '搜索', aboutHeading: '关于' };
+  await page.route('https://api.github.com/**', async route => {
+    const request = route.request();
+    const url = new URL(request.url());
+    const path = url.pathname;
+    expect(request.headers().authorization).toBe('Bearer example-test-token');
+    if (request.method() === 'PUT') {
+      saved.push({ path, body: request.postDataJSON() });
+      return route.fulfill({ json: { content: { sha: 'new-sha' } } });
+    }
+    if (path === '/user') return route.fulfill({ json: { login: 'owner' } });
+    if (path === '/repos/ChzHub/Blog-Study-and-share') return route.fulfill({ json: { permissions: { push: true } } });
+    if (path.endsWith('/src/content/posts')) return route.fulfill({ json: [] });
+    if (path.endsWith('/src/config/content.json')) return route.fulfill({ json: { encoding: 'base64', content: Buffer.from(JSON.stringify(content)).toString('base64'), sha: 'settings-sha' } });
+    return route.fulfill({ status: 404 });
+  });
+  await page.goto('/admin/');
+  await page.getByLabel('GitHub 访问令牌').fill('example-test-token');
+  await page.getByRole('button', { name: '连接仓库' }).click();
+  await expect(page.getByText('已连接：owner')).toBeVisible();
+  await page.getByLabel('文章链接名称').fill('new-note');
+  await page.getByLabel('发布日期').fill('2026-11-10');
+  await page.getByLabel('文章标题').fill('测试文章');
+  await page.getByLabel('文章摘要').fill('文章摘要');
+  await page.getByLabel('标签').fill('技术, 笔记');
+  await page.getByLabel('正文（Markdown）').fill('正文内容');
+  await page.getByRole('button', { name: '保存文章到 GitHub' }).click();
+  await expect(page.locator('#admin-status')).toContainText('文章已保存');
+  expect(saved[0].path).toContain('/src/content/posts/new-note.md');
+  const markdown = Buffer.from(saved[0].body.content, 'base64').toString('utf8');
+  expect(markdown).toContain('测试文章');
+  expect(markdown).toContain('正文内容');
+  await page.getByRole('button', { name: '站点文案' }).click();
+  await page.getByLabel('首页文章区标题').fill('最新手记');
+  await page.getByRole('button', { name: '保存站点文案' }).click();
+  await expect(page.locator('#admin-status')).toContainText('站点文案已保存');
+  expect(saved[1].body.sha).toBe('settings-sha');
+  expect(JSON.parse(Buffer.from(saved[1].body.content, 'base64').toString('utf8')).homeHeading).toBe('最新手记');
+  await page.getByRole('button', { name: '断开连接' }).click();
+  await expect(page.getByLabel('GitHub 访问令牌')).toHaveValue('');
+});
+
+test('admin preserves existing metadata and refuses conflicting edits', async ({ page }) => {
+  const oldMarkdown = '---\ntitle: Old title\ndescription: Old description\npubDate: "2026-10-20"\ntags: [CSS]\ncover: ../../assets/cover.jpg\ncustomField: retained\n---\n\nOld body\n';
+  let sent: any;
+  await page.route('https://api.github.com/**', async route => {
+    const req = route.request(); const path = new URL(req.url()).pathname;
+    if (req.method() === 'PUT') { sent = req.postDataJSON(); return route.fulfill({ status: 409, json: { message: 'conflict' } }); }
+    if (path === '/user') return route.fulfill({ json: { login: 'owner' } });
+    if (path === '/repos/ChzHub/Blog-Study-and-share') return route.fulfill({ json: { permissions: { push: true } } });
+    if (path.endsWith('/src/content/posts')) return route.fulfill({ json: [{ type: 'file', name: 'old-note.md' }] });
+    if (path.endsWith('/src/content/posts/old-note.md')) return route.fulfill({ json: { encoding: 'base64', content: Buffer.from(oldMarkdown).toString('base64'), sha: 'original-sha' } });
+    if (path.endsWith('/src/config/content.json')) return route.fulfill({ json: { encoding: 'base64', content: Buffer.from('{}').toString('base64'), sha: 'settings-sha' } });
+    return route.fulfill({ status: 404 });
+  });
+  await page.goto('/admin/');
+  await page.getByLabel('GitHub 访问令牌').fill('example-test-token');
+  await page.getByRole('button', { name: '连接仓库' }).click();
+  await page.getByLabel('选择文章').selectOption('old-note');
+  await expect(page.getByLabel('文章标题')).toHaveValue('Old title');
+  await expect(page.getByLabel('文章链接名称')).toHaveAttribute('readonly', '');
+  await page.getByLabel('文章标题').fill('Updated title');
+  await page.getByRole('button', { name: '保存文章到 GitHub' }).click();
+  await expect(page.locator('#admin-status')).toContainText('保存冲突');
+  expect(sent.sha).toBe('original-sha');
+  const markdown = Buffer.from(sent.content, 'base64').toString('utf8');
+  expect(markdown).toContain('cover: ../../assets/cover.jpg');
+  expect(markdown).toContain('customField: retained');
+});

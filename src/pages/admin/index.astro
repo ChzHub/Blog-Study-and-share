@@ -1,0 +1,15 @@
+---
+import Base from '../../layouts/Base.astro';
+---
+<Base title="内容管理" noindex>
+  <div class="shell admin-page" data-pagefind-ignore>
+    <header class="admin-heading"><div><span class="eyebrow">CONTENT MANAGER</span><h1>内容管理</h1><p>管理站点文案和文章。保存后会提交到 GitHub，由 Vercel 重新构建网站。</p></div><a href="/">返回网站 ↗</a></header>
+    <div id="admin-status" role="status" aria-live="polite" class="admin-status"></div>
+    <section id="login-panel" class="admin-panel"><h2>连接 GitHub</h2><p>使用仅授予本仓库 Contents 读写权限的细粒度访问令牌。令牌只保留在此页面内存中，关闭或刷新页面后需重新输入。</p><form id="login-form"><label for="token">GitHub 访问令牌</label><input id="token" type="password" required autocomplete="off" spellcheck="false" /><button type="submit">连接仓库</button></form><p><a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener noreferrer">创建细粒度令牌 ↗</a> · 仓库：ChzHub/Blog-Study-and-share，权限：Contents 读写。</p></section>
+    <div id="manager" hidden><div class="admin-toolbar"><div><strong id="account-name"></strong><span> / ChzHub/Blog-Study-and-share · main</span></div><button type="button" id="logout" class="admin-secondary">断开连接</button></div><div class="admin-tabs" role="group" aria-label="管理内容"><button type="button" data-tab="posts" aria-pressed="true">文章管理</button><button type="button" data-tab="settings" aria-pressed="false">站点文案</button></div>
+      <section id="posts-panel" class="admin-panel"><div class="admin-section-head"><div><h2>文章管理</h2><p>新建或编辑 Markdown 文章。草稿不会出现在网站上。</p></div><button type="button" id="new-post" class="admin-secondary">新建文章</button></div><label for="post-select">选择文章</label><select id="post-select"><option value="">新建文章</option></select><form id="post-form"><div class="admin-grid"><div><label for="slug">文章链接名称</label><input id="slug" required pattern="[a-z0-9]+(?:-[a-z0-9]+)*" placeholder="例如 my-first-post" /><small>只用小写英文字母、数字和连字符；保存后不建议修改。</small></div><div><label for="date">发布日期</label><input id="date" required placeholder="2026-11-10 或带时区的 ISO 时间" /></div></div><label for="post-title">文章标题</label><input id="post-title" required /><label for="description">文章摘要</label><textarea id="description" rows="2" required></textarea><label for="tags">标签</label><input id="tags" placeholder="多个标签用英文逗号分隔" /><div class="admin-checks"><label><input type="checkbox" id="draft" /> 草稿</label><label><input type="checkbox" id="featured" /> 精选</label></div><label for="markdown">正文（Markdown）</label><textarea id="markdown" rows="16" required></textarea><label for="import-file">导入 Markdown 文件</label><input id="import-file" type="file" accept=".md,.markdown,text/markdown,text/plain" /><small>可导入包含 frontmatter 的 .md 文件；图片文件需另行放入仓库。</small><div class="admin-actions"><button type="submit">保存文章到 GitHub</button><span>保存后等待自动部署完成。</span></div></form></section>
+      <section id="settings-panel" class="admin-panel" hidden><h2>站点文案</h2><p>修改站点名称、作者信息和主要页面标题。</p><form id="settings-form"><div id="settings-fields"></div><div class="admin-actions"><button type="submit">保存站点文案</button><span>保存后等待自动部署完成。</span></div></form></section>
+    </div>
+  </div>
+  <script src="../../scripts/admin.js"></script>
+</Base>

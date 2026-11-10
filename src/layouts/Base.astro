@@ -14,7 +14,7 @@ const links = [{ href: '/', label: '首页', active: pathname === '/' }, { href:
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#F7F5F0" />
+    <meta name="theme-color" content="#111923" />
     <title>{pageTitle}</title>
     <meta name="description" content={description} />
     <meta name="author" content={site.author.name} />
@@ -41,7 +41,7 @@ const links = [{ href: '/', label: '首页', active: pathname === '/' }, { href:
     </header>
     <main id="main" tabindex="-1"><slot /></main>
     <footer class="site-footer shell" data-pagefind-ignore>
-      <div class="footer-top"><div><a class="footer-brand" href="/">{site.name}<span>。</span></a><p>认真观察，自由思考，持续记录。</p></div><div class="footer-links"><a href="/posts/">全部文章</a><a href="/about/">关于这里</a><a href="/rss.xml">RSS <Icon name="external" size={13} /></a></div></div>
+      <div class="footer-top"><div><a class="footer-brand" href="/">{site.name}<span>。</span></a><p>认真观察，自由思考，持续记录。</p></div><div class="footer-links"><a href="/posts/">全部文章</a><a href="/about/">关于这里</a><a href="/admin/">内容管理</a><a href="/rss.xml">RSS <Icon name="external" size={13} /></a></div></div>
       <div class="footer-bottom"><span>© {new Date().getFullYear()} {site.name} · 以文字连接想法</span><span>MADE FOR THE CURIOUS <span class="tiny-sun">✳</span></span></div>
     </footer>
   </body>

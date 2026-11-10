@@ -6,6 +6,6 @@ export default defineConfig({
   site: site.url,
   output: 'static',
   trailingSlash: 'always',
-  integrations: [sitemap({ filter: (url) => !['/404/', '/404.html', '/search/'].some(path => url.endsWith(path)) })],
+  integrations: [sitemap({ filter: (url) => !['/404/', '/404.html', '/search/', '/admin/'].some(path => url.endsWith(path)) })],
   markdown: { shikiConfig: { theme: 'github-light', wrap: false } },
 });
